@@ -9,6 +9,9 @@
   "author": "Chaitu",
   "license": "ISC",
   "dependencies": {
+    "compression": "^1.7.0",
+    "cors": "^2.8.4",
+    "express": "^4.15.3",
     "grunt": "^1.0.1",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-uglify": "^3.0.1"

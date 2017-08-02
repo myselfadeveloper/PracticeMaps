@@ -1,21 +1,25 @@
-var http = require('http');
-var fs = require('fs');
-var hostname = '127.0.0.1';
-// localhost:3000
-var port = 3000;
-fs.readFile('index.html', (err,html) =>{
-	if(err){
-		throw err;
-	}
+var express = require('express');
+var compression = require('compression');
+var path = require('path');
+var cors = require('cors');
+var router = express.Router();
 
-	var server = http.createServer((req,res) =>{
-		res.statusCode = 200;
-		res.setHeader('Content-type', 'text/html');
-		res.write(html);
-		res.end();
-	});
+var app = express();
 
-	server.listen(port, hostname, () => {
-	console.log('Server Started on port ' +port);
-	});
+app.use('/src', express.static(path.join(__dirname, '/src')));
+
+app.enable('trust proxy');
+
+app.use(compression());
+
+app.get('*', function(req, res) {
+    res.header('Cache-Control', "max-age=60, must-revalidate, private");
+    res.sendFile( path.join(__dirname, 'index.html') );
+});
+
+
+var server = app.listen(process.env.PORT || 5000, function () {
+    var host = server.address().address;
+    var port = server.address().port;
+    console.log(`ESRI ARCGIS-JS-API 4.4 Example app listening at http://%s:%s`, host, port);
 });
