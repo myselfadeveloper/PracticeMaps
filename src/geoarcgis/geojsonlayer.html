@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+<meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+<title>ArcGIS GeoJSON Layer</title>
+<link rel="shortcut icon" href="//esri.github.io/quickstart-map-js/images/favicon.ico">
+<!-- ArcGIS API for JavaScript CSS-->
+<link rel="stylesheet" href="https://js.arcgis.com/3.23/esri/css/esri.css">
+<!-- Web Framework CSS - Bootstrap (getbootstrap.com) and Bootstrap-map-js (github.com/esri/bootstrap-map-js) -->
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="//esri.github.io/bootstrap-map-js/src/css/bootstrapmap.css">
+<style> 
+    html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+    #map{
+      padding:0;
+    }
+    @media (max-width: 600px) {
+        .panel-fixed {
+            width: 250px;
+        }
+    }
+    #HomeButton {
+      position: absolute;
+      top: 95px;
+      left: 20px;
+      z-index: 50;
+    }
+    #rightPane {
+      width: 20%;
+    }
+
+    #legendPane {
+      border: solid #97DCF2 1px;
+    }
+  </style> 
+
+<!-- ArcGIS API for JavaScript library references -->
+<script src="https://js.arcgis.com/3.23/"></script>
+
+<!-- Terraformer reference -->
+<script src="./vendor/terraformer/terraformer.min.js"></script>
+<script src="./vendor/terraformer-arcgis-parser/terraformer-arcgis-parser.min.js"></script>
+
+<script>
+    require(["esri/map",
+        "esri/dijit/HomeButton",
+        "./src/geojsonlayer.js",
+        "esri/renderers/SimpleRenderer",
+        "esri/dijit/BasemapGallery", 
+        "esri/dijit/Legend",
+        "esri/arcgis/utils",
+        "dojo/_base/array",
+        "dojo/parser",
+        "dojo/on",
+        "dojo/query",
+        "dojo/dom",
+        "dijit/layout/BorderContainer", 
+        "dijit/layout/ContentPane",
+        "dijit/layout/AccordionContainer",
+        "dijit/TitlePane",
+        "dojo/domReady!"],
+      function (Map, HomeButton, GeoJsonLayer, SimpleRenderer, BasemapGallery, Legend, arcgisUtils, arrayUtils, parser, on, query, dom) {
+        parser.parse();
+        // Create map
+        var map = new Map("mapDiv", {
+            basemap: "gray",
+            center: [149, -32],
+            zoom: 7
+        });
+
+        var home = new HomeButton({
+            map: map
+        }, "HomeButton");
+        home.startup();
+
+        var basemapGallery = new BasemapGallery({
+            showArcGISBasemaps: true,
+            map: map
+        }, "basemapGallery");
+        basemapGallery.startup();
+        
+        basemapGallery.on("error", function(msg) {
+            console.log("basemap gallery error:  ", msg);
+        });
+
+        map.infoWindow.domNode.className += " light";
+
+        map.on("load", function (e) {
+            addGeoJsonLayer("./data/budget.geojson");
+        });
+
+        function addGeoJsonLayer(url) {
+            // Create the layer
+            var geoJsonLayer = new GeoJsonLayer({
+                url: url // ./data/dc-schools.json
+            });
+
+            //Optional SimpleRenderer if you don't want a random symbol and color
+            var simpleJson = {
+                "type": "simple",
+                "label": "",
+                "description": "",
+                "symbol": {
+                    "color": [210,105,30,191],
+                    "size": 10,
+                    "angle": 0,
+                    "xoffset": 0,
+                    "yoffset": 0,
+                    "type": "esriSMS" // esriSMS, esriSLS
+                }
+            };
+            geoJsonLayer.renderer = new SimpleRenderer(simpleJson);
+
+            // Zoom to layer
+            geoJsonLayer.on("update-end", function (e) {
+                map.setExtent(e.target.extent.expand(1.2));
+            });
+            // Add to map
+            map.addLayer(geoJsonLayer);
+
+        }
+
+        function removeAllLayers() {
+            var i, lyr, ids = map.graphicsLayerIds;
+            for (i = ids.length -1; i > -1; i--) {
+                lyr = map.getLayer(ids[i]);
+                map.removeLayer(lyr);
+            }
+            map.infoWindow.hide();
+        }
+
+        // Toggle panel
+        on(query(".panel-heading")[0], "click", function () {
+            if (query(".glyphicon.glyphicon-chevron-up")[0]) {
+                query(".glyphicon").replaceClass("glyphicon-chevron-down", "glyphicon-chevron-up");
+                query(".panel-body.collapse").removeClass("in");
+            } else {
+                query(".glyphicon").replaceClass("glyphicon-chevron-up", "glyphicon-chevron-down");
+                query(".panel-body.collapse").addClass("in");
+            }
+        });
+    });
+</script>
+</head>
+<body class="claro">
+    <div data-dojo-type="dijit/layout/BorderContainer" 
+         data-dojo-props="design:'headline', gutters:false" 
+         style="width:100%;height:100%;margin:0;">
+    <div id="mapDiv" 
+           data-dojo-type="dijit/layout/ContentPane" 
+           data-dojo-props="region:'center'" 
+           style="padding:0;">
+  
+        <div style="position:absolute; right:20px; top:10px; z-Index:999;">
+          <div data-dojo-type="dijit/TitlePane" 
+               data-dojo-props="title:'Switch Basemap', open:true">
+            <div data-dojo-type="dijit/layout/ContentPane" style="width:380px; height:280px; overflow:auto;">
+              <div id="basemapGallery"></div>
+            </div>
+          </div>
+        </div>
+        <div id="HomeButton"></div>
+      </div>
+    </div>
+</body>
+</html>
